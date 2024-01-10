@@ -5,6 +5,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/panithee/internship_day2/controller"
 	"github.com/panithee/internship_day2/dto"
@@ -28,6 +29,11 @@ type Message struct {
 	Message string `json:"message"`
 }
 
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
 func register(db *gorm.DB, c *gin.Context) {
 	var registerForm RegisterFormation
 
@@ -35,13 +41,27 @@ func register(db *gorm.DB, c *gin.Context) {
 		log.Println("Cannot bind received JSON to registerForm")
 	}
 
-	user := dto.Users{
-		Email: registerForm.Email, Password: registerForm.Password,
+	hashPassword, err := HashPassword(registerForm.Password)
+	if err != nil {
+		log.Println(err)
 	}
 
-	db.Create(&user)
+	log.Println(hashPassword)
 
-	c.IndentedJSON(200, gin.H{"message": "register success"})
+	// match := CheckPasswordHash(registerForm.Password, hashPassword)
+	// log.Println(match)
+
+	user := dto.Users{
+		Email: registerForm.Email, Password: hashPassword,
+	}
+
+	data := db.Create(&user)
+	if data.Error != nil {
+		c.IndentedJSON(400, gin.H{"message": data.Error.Error()})
+	} else {
+		c.IndentedJSON(200, gin.H{"message": "register success"})
+	}
+
 }
 
 func Post(db *gorm.DB, c *gin.Context) {
@@ -100,7 +120,7 @@ func main() {
 
 	// connect db with insert user as user and pass as password and db is database name in mysql
 	// refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
-	dsn := "user:password@tcp(127.0.0.1:3306)/db?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "user:pass@tcp(127.0.0.1:3306)/db?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {

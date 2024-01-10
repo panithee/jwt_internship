@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/panithee/internship_day2/dto"
 	"github.com/panithee/internship_day2/service"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +30,11 @@ func LoginHandler(
 	}
 }
 
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
 func (controller *loginController) Login(ctx *gin.Context, db *gorm.DB) {
 	var credential dto.LoginCredentials
 	err := ctx.BindJSON(&credential)
@@ -38,10 +44,14 @@ func (controller *loginController) Login(ctx *gin.Context, db *gorm.DB) {
 	log.Print(credential)
 
 	var user dto.Users
-	result := db.Where("email = ? AND password = ?", credential.Email, credential.Password).First(&user)
+	// result := db.Where("email = ? AND password = ?", credential.Email, credential.Password).First(&user)
 
-	if result.Error != nil {
-		ctx.IndentedJSON(401, gin.H{"message": "username or password is not matching"})
+	result := db.Where("email = ?", credential.Email).First(&user)
+
+	if result.Error != nil || !CheckPasswordHash(credential.Password, user.Password) {
+		ctx.IndentedJSON(401, gin.H{"message": "email or password is not match"})
+		return
+
 	} else {
 		token := controller.jWtService.GenerateToken(credential.Email, true)
 
