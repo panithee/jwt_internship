@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/panithee/internship_day2/dto"
+	"github.com/panithee/internship_day2/models"
 	"github.com/panithee/internship_day2/service"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -43,13 +44,13 @@ func (controller *loginController) Login(ctx *gin.Context, db *gorm.DB) {
 	}
 	log.Print(credential)
 
-	var user dto.Users
+	var user models.Users
 	// result := db.Where("email = ? AND password = ?", credential.Email, credential.Password).First(&user)
 
 	result := db.Where("email = ?", credential.Email).First(&user)
 
 	if result.Error != nil || !CheckPasswordHash(credential.Password, user.Password) {
-		ctx.IndentedJSON(401, gin.H{"message": "email or password is not match"})
+		ctx.IndentedJSON(40, gin.H{"message": "email or password is not match"})
 		return
 
 	} else {

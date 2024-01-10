@@ -10,6 +10,7 @@ import (
 	"github.com/panithee/internship_day2/controller"
 	"github.com/panithee/internship_day2/dto"
 	"github.com/panithee/internship_day2/middleware"
+	"github.com/panithee/internship_day2/models"
 	"github.com/panithee/internship_day2/service"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -51,7 +52,7 @@ func register(db *gorm.DB, c *gin.Context) {
 	// match := CheckPasswordHash(registerForm.Password, hashPassword)
 	// log.Println(match)
 
-	user := dto.Users{
+	user := models.Users{
 		Email: registerForm.Email, Password: hashPassword,
 	}
 
@@ -94,13 +95,13 @@ func Post(db *gorm.DB, c *gin.Context) {
 	}
 	log.Println(userEmail)
 
-	var user dto.Users
+	var user models.Users
 
 	// get user data
 	db.Where("email = ?", userEmail).First(&user)
 
 	// assign user.Id into UserId for references
-	postStruct := dto.Posts{
+	postStruct := models.Posts{
 		Message: message.Message,
 		UserId:  user.ID,
 	}
@@ -128,7 +129,7 @@ func main() {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&dto.Users{}, &dto.Posts{})
+	db.AutoMigrate(&models.Users{}, &models.Posts{})
 
 	router := gin.Default()
 	router.POST("/register", func(ctx *gin.Context) {
