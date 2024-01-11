@@ -148,6 +148,7 @@ func main() {
 	userDB := os.Getenv("DB_USER")
 	passDB := os.Getenv("DB_PASS")
 	dbname := os.Getenv("DB_NAME")
+	port := os.Getenv("PORT")
 
 	// var loginService service.LoginService = service.DynamicLoginService()
 	var jwtService service.JWTService = service.JWTAuthService()
@@ -194,6 +195,6 @@ func main() {
 		Post(db, ctx)
 	})
 
-	router.Run(":8080")
+	router.Run(port)
 
 }
