@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -167,6 +168,7 @@ func main() {
 	db.AutoMigrate(&models.Users{}, &models.Posts{})
 
 	router := gin.Default()
+	router.Use(cors.Default())
 	router.POST("/register", func(ctx *gin.Context) {
 		register(db, ctx)
 	})
