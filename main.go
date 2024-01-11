@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/panithee/internship_day2/controller"
@@ -136,6 +139,15 @@ func GetAllUserPosts(db *gorm.DB, c *gin.Context) {
 
 func main() {
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading env")
+	}
+
+	userDB := os.Getenv("DB_USER")
+	passDB := os.Getenv("DB_PASS")
+	dbname := os.Getenv("DB_NAME")
+
 	// var loginService service.LoginService = service.DynamicLoginService()
 	var jwtService service.JWTService = service.JWTAuthService()
 	var loginController controller.LoginController = controller.LoginHandler(
@@ -144,7 +156,7 @@ func main() {
 
 	// connect db with insert user as user and pass as password and db is database name in mysql
 	// refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
-	dsn := "user:pass@tcp(127.0.0.1:3306)/db?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", userDB, passDB, dbname)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
