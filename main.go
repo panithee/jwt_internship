@@ -90,7 +90,7 @@ func Post(db *gorm.DB, c *gin.Context) {
 	userEmail, emailOk := nameClaim.(string)
 	if !emailOk {
 		log.Println("Invalid 'name' claim type")
-		c.JSON(401, gin.H{"error": "Unauthorized"})
+		c.IndentedJSON(401, gin.H{"error": "Unauthorized"})
 		return
 	}
 	log.Println(userEmail)
@@ -98,7 +98,10 @@ func Post(db *gorm.DB, c *gin.Context) {
 	var user models.Users
 
 	// get user data
-	db.Where("email = ?", userEmail).First(&user)
+	result := db.Where("email = ?", userEmail).First(&user)
+	if result.Error != nil {
+		c.IndentedJSON(404, gin.H{"message": result.Error.Error()})
+	}
 
 	// assign user.Id into UserId for references
 	postStruct := models.Posts{
@@ -108,6 +111,26 @@ func Post(db *gorm.DB, c *gin.Context) {
 	// save data in posts table in database
 	db.Create(&postStruct)
 	c.IndentedJSON(200, gin.H{"data": message.Message, "message": "post success"})
+
+}
+
+func GetAllUserPosts(db *gorm.DB, c *gin.Context) {
+
+	var postsResponse []struct {
+		Email     string
+		Message   string
+		CreatedAt string
+	}
+	result := db.Table("posts").
+		Select("users.email, posts.message, posts.created_at").
+		Joins("JOIN users ON posts.user_id = users.id").
+		Order("posts.created_at DESC").
+		Find(&postsResponse)
+
+	if result.Error != nil {
+		c.IndentedJSON(500, gin.H{"message": result.Error.Error()})
+	}
+	c.IndentedJSON(200, postsResponse)
 
 }
 
@@ -148,6 +171,10 @@ func main() {
 	// 		Post(db, ctx)
 	// 	})
 	// }
+
+	router.GET("/post", func(ctx *gin.Context) {
+		GetAllUserPosts(db, ctx)
+	})
 
 	router.POST("/post", middleware.AuthorizeJWT(), func(ctx *gin.Context) {
 		Post(db, ctx)
