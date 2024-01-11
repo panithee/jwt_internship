@@ -50,7 +50,7 @@ func (controller *loginController) Login(ctx *gin.Context, db *gorm.DB) {
 	result := db.Where("email = ?", credential.Email).First(&user)
 
 	if result.Error != nil || !CheckPasswordHash(credential.Password, user.Password) {
-		ctx.IndentedJSON(40, gin.H{"message": "email or password is not match"})
+		ctx.IndentedJSON(401, gin.H{"message": "email or password is not match"})
 		return
 
 	} else {
