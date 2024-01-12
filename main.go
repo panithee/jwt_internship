@@ -169,7 +169,13 @@ func main() {
 	db.AutoMigrate(&models.Users{}, &models.Posts{})
 
 	router := gin.Default()
-	router.Use(cors.Default())
+
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:3000"}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
+	config.AllowHeaders = []string{"Origin"}
+	router.Use(cors.New(config))
+
 	router.POST("/register", func(ctx *gin.Context) {
 		register(db, ctx)
 	})
