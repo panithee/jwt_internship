@@ -121,9 +121,9 @@ func Post(db *gorm.DB, c *gin.Context) {
 func GetAllUserPosts(db *gorm.DB, c *gin.Context) {
 
 	var postsResponse []struct {
-		Email     string
-		Message   string
-		CreatedAt string
+		Email     string `json:"email"`
+		Message   string `json:"message"`
+		CreatedAt string `json:"createdAt"`
 	}
 	result := db.Table("posts").
 		Select("users.email, posts.message, posts.created_at").
@@ -136,6 +136,22 @@ func GetAllUserPosts(db *gorm.DB, c *gin.Context) {
 	}
 	c.IndentedJSON(200, postsResponse)
 
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }
 
 func main() {
@@ -169,12 +185,7 @@ func main() {
 	db.AutoMigrate(&models.Users{}, &models.Posts{})
 
 	router := gin.Default()
-
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000"}
-	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
-	config.AllowHeaders = []string{"Origin", "Authorization"}
-	router.Use(cors.New(config))
+	router.Use(cors.Default())
 
 	router.POST("/register", func(ctx *gin.Context) {
 		register(db, ctx)
