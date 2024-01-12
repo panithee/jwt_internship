@@ -173,7 +173,7 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://localhost:3000"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
-	config.AllowHeaders = []string{"Origin"}
+	config.AllowHeaders = []string{"Origin", "Authorization"}
 	router.Use(cors.New(config))
 
 	router.POST("/register", func(ctx *gin.Context) {
